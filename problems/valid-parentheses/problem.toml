@@ -1,0 +1,8 @@
+title = "Valid Parentheses"
+difficulty = "easy"
+tags = ["stack", "string"]
+time_limit_ms = 1000
+memory_limit_mb = 256
+comparer = "lines"
+samples = ["01", "02"]
+show_failed_input = true

@@ -1,0 +1,72 @@
+# Language registry. Adding a language is an entry here, never a code change.
+#
+# Paths match what scripts/setup-isolate.sh installs on Ubuntu 22.04/24.04:
+#   Python  /usr/bin/python3            (apt)
+#   Go      /usr/local/go               (official tarball) + warm cache in /var/cache/codexec/gocache
+#   Rust    /opt/rustup/toolchains/...  (rustup, minimal profile)
+#
+# Every argv[0] must be an absolute path that exists *inside* the sandbox.
+# isolate mounts /bin, /lib, /lib64 and /usr read-only by default; anything
+# else needs a `dirs` entry ("inside=outside" or just "path").
+
+[python]
+display_name = "Python 3"
+source_file = "main.py"
+# Problem time limits are multiplied by this. Measure with reference solutions; do not guess.
+time_multiplier = 3.0
+
+[python.run]
+argv = ["/usr/bin/python3", "-B", "main.py"]
+env = { PYTHONIOENCODING = "utf-8" }
+
+
+[go]
+display_name = "Go"
+source_file = "main.go"
+time_multiplier = 1.0
+# The Go runtime reserves large virtual ranges, so an address-space rlimit
+# kills it at start-up. Memory is limited by cgroups instead (use_cgroups = true).
+address_space_limit = false
+
+[go.compile]
+argv = ["/usr/local/go/bin/go", "build", "-o", "main", "main.go"]
+# Read-only, pre-built standard library cache. Without it every submission
+# recompiles the standard library (about 10 CPU-seconds). Read-only matters:
+# a writable shared cache would let one user poison another user's binary.
+dirs = ["/gocache=/var/cache/codexec/gocache"]
+# The go tool takes file locks; isolate >= 2.7 blocks them by default (flag 4).
+# 65531 = everything restricted except file locks, for the compile step only.
+syscall_flags = 65531
+
+[go.compile.env]
+PATH = "/usr/local/go/bin:/usr/bin:/bin"
+HOME = "/tmp"
+GOCACHE = "/gocache"
+GOPATH = "/tmp/gopath"
+GOFLAGS = "-buildvcs=false"
+GOTOOLCHAIN = "local"
+CGO_ENABLED = "0"
+# The package index inside a shared cache is not valid across mount namespaces.
+GODEBUG = "goindex=0"
+
+[go.run]
+argv = ["./main"]
+# One sandbox slot is one core; more Ps only add scheduler noise.
+env = { GOMAXPROCS = "1" }
+
+
+[rust]
+display_name = "Rust"
+source_file = "main.rs"
+time_multiplier = 1.0
+
+[rust.compile]
+argv = [
+  "/opt/rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/rustc",
+  "-O", "--edition", "2021", "-o", "main", "main.rs",
+]
+dirs = ["/opt/rustup"]
+env = { PATH = "/usr/bin:/bin" }
+
+[rust.run]
+argv = ["./main"]

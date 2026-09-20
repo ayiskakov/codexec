@@ -1,0 +1,38 @@
+# codexec configuration. Paths are relative to the working directory.
+
+[server]
+listen = "127.0.0.1:8080"
+database = "data/codexec.db"
+problems_dir = "problems"
+languages_file = "languages.toml"
+# A job whose worker stops heart-beating for this long is re-queued.
+lease_seconds = 60
+# After this many failed attempts a submission gets the verdict IE.
+max_attempts = 3
+max_source_bytes = 65536
+run_queue_capacity = 256
+run_ttl_seconds = 600
+
+[sandbox]
+isolate_path = "/usr/local/bin/isolate"
+# cgroup v2 memory control. Keep true anywhere real users submit code.
+# false = rlimit fallback for machines without cgroup v2 (development only):
+# Go then runs without a hard memory cap and MLE is detected after the fact.
+use_cgroups = true
+first_box_id = 0
+# Concurrent sandboxes. Rule of thumb: physical cores minus one.
+slots = 2
+meta_dir = "data/meta"
+# Ubuntu routes cc, ld and friends through /etc/alternatives symlinks.
+extra_dirs = ["/etc/alternatives"]
+
+[judge]
+compile_cpu_time_ms = 15000
+compile_wall_time_ms = 40000
+compile_memory_kb = 1048576
+compile_processes = 128
+run_processes = 64
+file_size_kb = 65536
+stdout_bytes = 16777216
+stderr_bytes = 65536
+excerpt_bytes = 1024

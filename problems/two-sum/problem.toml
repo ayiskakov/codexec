@@ -1,0 +1,8 @@
+title = "Two Sum"
+difficulty = "easy"
+tags = ["array", "hash-table"]
+time_limit_ms = 1000
+memory_limit_mb = 256
+comparer = "tokens"
+samples = ["01"]
+show_failed_input = true
